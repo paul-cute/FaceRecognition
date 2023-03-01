@@ -1,0 +1,15 @@
+.Tilt {
+    background: linear-gradient(89deg, #FF5EDF 0%, #04C8DE 100%);
+    border-radius: .25rem;
+    box-shadow: none;
+    height: 150px;
+    width: 150px;
+}
+
+div {
+    padding: 1rem;
+}
+
+.logo {
+    padding-top: 5px;
+}
