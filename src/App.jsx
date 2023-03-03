@@ -4,7 +4,6 @@ import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm'
 import Logo from './components/Logo/Logo'
 import Navigation from './components/Navigation/Navigation'
 import Rank from './components/Rank/Rank'
-import Clarifai from 'clarifai';
 import React, { Component } from 'react'
 import FaceRecognition from './components/FaceRecognition/FaceRecognition'
 
@@ -17,22 +16,22 @@ const APP_ID = 'my-first-application';
 // Change these to whatever model and image URL you want to use
 const MODEL_ID = 'face-detection';
 const MODEL_VERSION_ID = '6dc7e46bc9124c5c8824be4822abe105';    
-const IMAGE_URL = 'https://samples.clarifai.com/metro-north.jpg';
 export default class App extends Component {
 
   constructor() {
     super()
     this.state = {
-      input: ''
+      input: '',
+      imageUrl:''
     }
   }
 
   onInputChange = (event) =>{
-    console.log(event.target.value)
+    this.setState({input: event.target.value})
   }
 
   onButtonSubmit = () => {
-      console.log("click")
+      this.setState({imageUrl: this.state.input})
       const raw = JSON.stringify({
         "user_app_id": {
             "user_id": USER_ID,
@@ -42,7 +41,7 @@ export default class App extends Component {
             {
                 "data": {
                     "image": {
-                        "url": IMAGE_URL
+                        "url": this.state.input
                     }
                 }
             }
@@ -59,8 +58,8 @@ export default class App extends Component {
     };
 
     fetch("https://api.clarifai.com/v2/models/" + MODEL_ID + "/versions/" + MODEL_VERSION_ID + "/outputs", requestOptions)
-        .then(response => response.text())
-        .then(result => console.log(JSON.parse(result)))
+        .then(response => response.json())
+        .then(result => console.log(result.outputs[0].data.regions[0].region_info.bounding_box))
         .catch(error => console.log('error', error));
   }
 
@@ -77,8 +76,7 @@ export default class App extends Component {
           onInputChange={this.onInputChange} 
           onButtonSubmit={this.onButtonSubmit}
         />
-        
-        <FaceRecognition/>
+        <FaceRecognition imageUrl={this.state.imageUrl}/>
       </div>
     )
   }

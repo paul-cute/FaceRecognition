@@ -1,9 +1,11 @@
 import React from 'react'
 
-function FaceRecognition() {
+function FaceRecognition({imageUrl}) {
   return (
-    <div className='center'>
-        <img src="" alt="" />
+    <div className='center ma'>
+      <div className='absolute mt2'>
+        <img src={imageUrl} alt="" width='500px' height='auto'/>
+      </div>
     </div>
   )
 }
