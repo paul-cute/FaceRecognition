@@ -27,8 +27,10 @@ class Signin extends React.Component {
         password: this.state.signInPassword
       })
     }).then(response => response.json())
-    .then(data => {
-      if(data === 'success'){
+    .then(user => {
+      console.log(user)
+      if(user.id){
+        this.props.loadUser(user);
         this.props.onRouteChange('home')
       } 
     })
@@ -68,7 +70,7 @@ class Signin extends React.Component {
               className="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib"
               type="submit"
               value="Sign in"
-              onClick={() => this.onSubmitSignIn('home')}
+              onClick={() => this.onSubmitSignIn()}
             />
           </div>
           <div className="lh-copy mt3">
