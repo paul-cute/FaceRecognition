@@ -21,18 +21,17 @@ const MODEL_VERSION_ID = '6dc7e46bc9124c5c8824be4822abe105';
 export default class App extends Component {
 
   constructor() {
-    super()
+    super();
     this.state = {
       input: '',
-      imageUrl:'',
+      imageUrl: '',
       box: {},
       route: 'signin',
       isSignedIn: false,
       user: {
-        id: "",
-        name: "",
-        email: "",
-        password:'',
+        id: '',
+        name: '',
+        email: '',
         entries: 0,
         joined: ''
       }
@@ -40,19 +39,16 @@ export default class App extends Component {
   }
 
   loadUser = (data) => {
-    this.setState({
-      user: {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        password:data.password,
-        entries: data.entries,
-        joined: data.joined
-      }
-    })
+    this.setState({user: {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      entries: data.entries,
+      joined: data.joined
+    }})
   }
 
-  calculateFaceLocation = (data) =>{
+  calculateFaceLocation = (data) => {
     const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
     const image = document.getElementById('inputimage');
     const width = Number(image.width);
@@ -66,14 +62,12 @@ export default class App extends Component {
   }
 
   displayFaceBox = (box) => {
-    console.log(box)
-    this.setState({box: box})
+    this.setState({box: box});
   }
 
-  onInputChange = (event) =>{
-    this.setState({input: event.target.value})
+  onInputChange = (event) => {
+    this.setState({input: event.target.value});
   }
-
   onButtonSubmit = () => {
       this.setState({imageUrl: this.state.input})
       const raw = JSON.stringify({
@@ -88,7 +82,7 @@ export default class App extends Component {
                         "url": this.state.input
                     }
                 }
-            }
+            } 
         ]
     });
 
@@ -114,9 +108,7 @@ export default class App extends Component {
               })
             }).then(response => response.json())
             .then(count =>{
-              this.setState({user: {
-                entries: count
-              }})
+              this.setState(Object.assign(this.state.user, { entries: JSON.parse(count.entries)}))
             })
           }
           this.displayFaceBox(this.calculateFaceLocation(result));
