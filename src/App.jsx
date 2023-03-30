@@ -8,7 +8,8 @@ import React, { Component } from 'react'
 import FaceRecognition from './components/FaceRecognition/FaceRecognition'
 import Signin from './components/Signin/Signin'
 import Register from './components/Register/Register'
-
+import Modal from "./components/Modal/Modal"
+import Profile from './components/Profile/Profile'
 
 const PAT = 'a30cecf1be134f50815736af065c02c0';
 // Specify the correct user_id/app_id pairings
@@ -18,24 +19,29 @@ const APP_ID = 'my-first-application';
 // Change these to whatever model and image URL you want to use
 const MODEL_ID = 'face-detection';
 const MODEL_VERSION_ID = '6dc7e46bc9124c5c8824be4822abe105';    
+
+const initialState = {
+  input: '',
+  imageUrl: '',
+  boxes: [],
+  route: 'signin',
+  isSignedIn: false,
+  isProfileOpen: false,
+  user: {
+    id: '',
+    name: '',
+    email: '',
+    entries: 0,
+    joined: '',
+    pet: '',
+    age: ''
+  }
+}
 export default class App extends Component {
 
   constructor() {
     super();
-    this.state = {
-      input: '',
-      imageUrl: '',
-      box: {},
-      route: 'signin',
-      isSignedIn: false,
-      user: {
-        id: '',
-        name: '',
-        email: '',
-        entries: 0,
-        joined: ''
-      }
-    }
+    this.state = initialState
   }
 
   loadUser = (data) => {
@@ -48,21 +54,24 @@ export default class App extends Component {
     }})
   }
 
-  calculateFaceLocation = (data) => {
-    const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
-    const image = document.getElementById('inputimage');
-    const width = Number(image.width);
-    const height = Number(image.height);
-    return {
-      leftCol: clarifaiFace.left_col * width,
-      topRow: clarifaiFace.top_row * height,
-      rightCol: width - (clarifaiFace.right_col * width),
-      bottomRow: height - (clarifaiFace.bottom_row * height)
-    }
+  calculateFacesLocation = (data) => {
+    return data.outputs[0].data.regions.map(face => {
+      const clarifaiFace = face.region_info.bounding_box  
+      const image = document.getElementById('inputimage');
+      const width = Number(image.width);
+      const height = Number(image.height);
+      return {
+        leftCol: clarifaiFace.left_col * width,
+        topRow: clarifaiFace.top_row * height,
+        rightCol: width - (clarifaiFace.right_col * width),
+        bottomRow: height - (clarifaiFace.bottom_row * height)
+      }
+    });
+    
   }
 
-  displayFaceBox = (box) => {
-    this.setState({box: box});
+  displayFaceBoxes = (boxes) => {
+    this.setState({boxes: boxes});
   }
 
   onInputChange = (event) => {
@@ -98,7 +107,7 @@ export default class App extends Component {
     fetch("https://api.clarifai.com/v2/models/" + MODEL_ID + "/versions/" + MODEL_VERSION_ID + "/outputs", requestOptions)
         .then(response => response.json())
         .then(result => {
-          //console.log(result.outputs[0].data.regions[0].region_info.bounding_box);
+          console.log(result);
           if(result){
             fetch('http://localhost:3000/image', {
               method: 'put',
@@ -110,26 +119,43 @@ export default class App extends Component {
             .then(count =>{
               this.setState(Object.assign(this.state.user, { entries: JSON.parse(count.entries)}))
             })
+            .catch(error => console.log)
           }
-          this.displayFaceBox(this.calculateFaceLocation(result));
+          this.displayFaceBoxes(this.calculateFacesLocation(result));
         })
         .catch(error => console.log('error', error));
   }
 
   onRouteChange = (route) => {
     if (route === 'signout') {
-      this.setState({isSignedIn: false})
+      return this.setState(initialState)
     } else if (route === 'home') {
       this.setState({isSignedIn: true})
     }
     this.setState({route: route});
   }
   
+  toggleModal = () => {
+    this.setState(pervState => ({
+      ...pervState,
+      isProfileOpen: !pervState.isProfileOpen
+    }))
+  }   
   render() {
     return (
       <div className="App">
         <ParticlesBg type="cobweb" bg={true} color={["FFFFFF"]}  className="particles"/>
-        <Navigation isSignedIn={this.state.isSignedIn} onRouteChange={this.onRouteChange}/>
+        <Navigation 
+          isSignedIn={this.state.isSignedIn} 
+          onRouteChange={this.onRouteChange}
+          toggleModal={this.toggleModal}/>
+        { this.state.isProfileOpen  && 
+          <Modal>
+            <Profile 
+              isProfileOpen={this.state.isProfileOpen} 
+              toggleModal={this.toggleModal}
+              user={this.state.user}/>
+          </Modal>}
         { this.state.route === 'home'
           ? <div>
               <Logo />
@@ -140,7 +166,7 @@ export default class App extends Component {
                 onInputChange={this.onInputChange}
                 onButtonSubmit={this.onButtonSubmit}
               />
-              <FaceRecognition box={this.state.box} imageUrl={this.state.imageUrl} />
+              <FaceRecognition boxes={this.state.boxes} imageUrl={this.state.imageUrl} />
             </div>
           : (
              this.state.route === 'signin'
